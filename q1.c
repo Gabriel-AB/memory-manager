@@ -30,8 +30,9 @@ int first_fit(size_t size) {
     for (size_t i = 0; i < NUM_PARTITIONS; i++) {
         int available = i;
         while (bitmap[available] == NONE && available < NUM_PARTITIONS) {
-            if (available - i < num_parts) return i;
-            available++;
+            available++; 
+            if (available - i >= num_parts)
+                return i;
         }
     }
     return -1;
@@ -63,16 +64,22 @@ void print_bitmap() {
     printf("\b]\n\n");
 }
 
-void verbose_alloc(Process process) {
+void* verbose_alloc(Process process) {
     int parts = get_num_partitions(process.size);
     printf(">> Allocating \'%s\' (id: '%c', partitions: %d)\n", 
         process.name, process.id, parts);
-    alloc(process, first_fit);
+
+    void* result = alloc(process, first_fit);
+    if (result == NULL) printf(">> (FAILED)\n");
     print_bitmap();
+
+    return result;
 }
 
 void verbose_dealloc(Process process) {
-    printf("<< Deallocating \'%s\'\n", process.name);
+    int parts = get_num_partitions(process.size);
+    printf("<< Deallocating \'%s\' (id: '%c', partitions: %d)\n", 
+        process.name, process.id, parts);
     dealloc(process);
     print_bitmap();
 }
@@ -86,17 +93,21 @@ int main(int argc, char const *argv[]) {
     memset(bitmap, NONE, NUM_PARTITIONS);
     print_bitmap();
 
-    Process max = {'A', "max", 1025}; // 2 parts
-    Process creito = {'B', "creito", 2050}; // 3 parts
-    Process jurema = {'C', "jurema", 5672}; // 6 parts
-    Process piton = {'D', "piton", 3202}; // 4 parts
+    Process p[] = {
+        {'A', "Process 1", 1025}, // 2 parts
+        {'B', "Process 2", 2050}, // 3 parts
+        {'C', "Process 3", 5672}, // 6 parts
+        {'D', "Process 4", 3202}, // 4 parts
+    };
 
-    verbose_alloc(jurema);
-    verbose_alloc(creito);
+    verbose_alloc(p[2]);
+    verbose_alloc(p[1]);
 
-    verbose_dealloc(jurema);
+    verbose_dealloc(p[2]);
     
-    verbose_alloc(max);
-    verbose_alloc(piton);
+    verbose_alloc(p[0]);
+    verbose_alloc(p[3]);
+    verbose_alloc(p[2]);
+    verbose_alloc(p[1]);
     return 0;
 }
