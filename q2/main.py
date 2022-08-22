@@ -110,12 +110,12 @@ def create_processes_from_file(path: str) -> list[Process]:
     return processes
 
 
-def print_memory_allocation_info(memory: Memory, virtual_memory: VirtualMemory):
+def print_memory_allocation_info(memory: Memory, virtual_memory: VirtualMemory, page_size: int):
     print("----------------------------------------------------")
     print("MEMORY ALLOCATION")
     print(f"Memory State/Capacity: {memory.current_size}/{memory.max_size}")
     print(f"Virtual Memory State/Capacity: {virtual_memory.current_size}/{virtual_memory.max_size}")
-    fragmented = memory.current_size == memory.max_size
+    fragmented = (memory.current_size % page_size) == 2
     print(f"Is Memory Fragmented?: {fragmented}")
     print(f"Pages Free/Allocated: {len(memory.pages)}/{len(virtual_memory.pages)}")
 
@@ -149,7 +149,7 @@ def main():
             else:
                 apply_lru_substitution(memory, virtual_memory, page)
         
-        print_memory_allocation_info(memory, virtual_memory)
+        print_memory_allocation_info(memory, virtual_memory, page_size)
 
     print(f"Page misses: {page_miss}")
 
